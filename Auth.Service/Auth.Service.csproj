@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Yamal</Authors>
+    <Company>Yamal</Company>
+    <Product>CMAS</Product>
+    <Description>Auth module</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyName>Cmas.Services.Auth</AssemblyName>
+    <RootNamespace>Cmas.Services.Auth</RootNamespace>
+    <PackageId>Cmas.Services.Auth</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Forms\**" />
+    <EmbeddedResource Remove="Forms\**" />
+    <None Remove="Forms\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.0.1" />
+    <PackageReference Include="Cmas.Infrastructure.Domain" Version="*" />
+    <PackageReference Include="Cmas.Infrastructure.ErrorHandler" Version="*" />
+    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
+    <PackageReference Include="Nancy.Validation.FluentValidation" Version="2.0.0-clinteastwood" />
+  </ItemGroup>
+
+</Project>
