@@ -2,6 +2,10 @@
 using System.Threading.Tasks;
 using Nancy;
 using System.Threading;
+using Cmas.Services.Auth.Dtos.Request;
+using Nancy.Validation;
+using Nancy.ModelBinding;
+using Cmas.Infrastructure.ErrorHandler;
 
 namespace Cmas.Services.Auth
 {
@@ -13,18 +17,45 @@ namespace Cmas.Services.Auth
         {
             _authService = new AuthService(serviceProvider);
 
+            /// <summary>
+            /// Получить токен
+            /// </summary>
+            Post<string>("/create-token", GetTokenHandlerAsync);
 
             /// <summary>
-            /// 
+            /// Обновить токен
             /// </summary>
-            Get<string>("/{id}", ExampleHandlerAsync);
+            Post<string>("/refresh-token", RefreshTokenHandlerAsync);
         }
 
         #region Обработчики
 
-        private async Task<string> ExampleHandlerAsync(dynamic args, CancellationToken ct)
+        private async Task<string> GetTokenHandlerAsync(dynamic args, CancellationToken ct)
         {
-            return string.Empty;
+            GetTokenRequest request = this.Bind();
+
+            var validationResult = this.Validate(request);
+
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationErrorException(validationResult.FormattedErrors);
+            }
+
+            return await _authService.CreateTokenAsync(request.Login, request.Password);
+        }
+
+        private async Task<string> RefreshTokenHandlerAsync(dynamic args, CancellationToken ct)
+        {
+            RefreshTokenRequest request = this.Bind();
+
+            var validationResult = this.Validate(request);
+
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationErrorException(validationResult.FormattedErrors);
+            }
+
+            return await _authService.RefreshTokenAsync(request.Token);
         }
 
         #endregion

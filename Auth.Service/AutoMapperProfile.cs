@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-namespace Cmas.Services.TimeSheets
+namespace Cmas.Services.Auth
 {
     public class AutoMapperProfile : Profile
     {
