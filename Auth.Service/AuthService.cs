@@ -63,6 +63,15 @@ namespace Cmas.Services.Auth
             return output.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="passwordHash"></param>
+        private string GetShortPasswordHash(string passwordHash)
+        {
+            return passwordHash.Substring(0, 10);
+        }
+
         private string CreateToken(User user)
         {
             if (user == null)
@@ -73,11 +82,14 @@ namespace Cmas.Services.Auth
             var expDate = DateTime.UtcNow.AddHours(1).Ticks;
             var issuedAt = DateTime.UtcNow.Ticks;
 
+            var shortPasswordHash = GetShortPasswordHash(user.PasswordHash);
+
             var payload = new Dictionary<string, object>()
             {
                 {"sub", user.Login},
                 {"exp", expDate},
                 {"iat", issuedAt},
+                {"sph", shortPasswordHash},
                 {"roles", string.Join(",", user.Roles)},
             };
 
@@ -135,7 +147,13 @@ namespace Cmas.Services.Auth
 
             User user = await _usersBusinessLayer.GetUser(payload.sub);
 
-            // TODO: проверка смены пароля
+            var shortPasswordHash = GetShortPasswordHash(user.PasswordHash);
+
+            if (shortPasswordHash != payload.sph)
+            {
+                _logger.LogInformation("Incorrect token (password changed)");
+                throw new InvalidTokenErrorException();
+            }
 
             if (user == null)
             {

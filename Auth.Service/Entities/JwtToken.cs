@@ -21,5 +21,10 @@
         /// Roles
         /// </summary>
         public string roles;
+
+        /// <summary>
+        /// short password  hash
+        /// </summary>
+        public string sph;
     }
 }
