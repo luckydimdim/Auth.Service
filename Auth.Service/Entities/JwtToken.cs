@@ -26,5 +26,10 @@
         /// short password  hash
         /// </summary>
         public string sph;
+
+        /// <summary>
+        /// subject name
+        /// </summary>
+        public string snm;
     }
 }

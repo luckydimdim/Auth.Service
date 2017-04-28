@@ -50,6 +50,8 @@ namespace Cmas.Services.Auth
                     identity.AddClaim(new Claim(ClaimTypes.Role.ToString(), role));
                 }
 
+                _logger.LogInformation(String.Format("User login: {0}", identity.Name));
+
                 var principal = new ClaimsPrincipal(identity);
 
                 return principal;

@@ -90,6 +90,7 @@ namespace Cmas.Services.Auth
                 {"exp", expDate},
                 {"iat", issuedAt},
                 {"sph", shortPasswordHash},
+                {"snm", user.Name},
                 {"roles", string.Join(",", user.Roles)},
             };
 
