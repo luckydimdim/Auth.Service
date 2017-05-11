@@ -11,11 +11,27 @@ namespace Cmas.Services.Auth
 {
     public class AuthModule : NancyModule
     {
-        private readonly AuthService _authService;
+
+        private readonly IServiceProvider _serviceProvider;
+
+        private AuthService authService;
+
+        private AuthService _authService {
+            get
+            {
+                if (authService == null)
+                    authService = new AuthService(_serviceProvider, Context);
+
+                return authService;
+            }
+        }
+
+
 
         public AuthModule(IServiceProvider serviceProvider) : base("/auth")
         {
-            _authService = new AuthService(serviceProvider);
+            _serviceProvider = serviceProvider;
+            
 
             /// <summary>
             /// Получить токен

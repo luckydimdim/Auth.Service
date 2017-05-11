@@ -12,6 +12,7 @@ using Cmas.Infrastructure.ErrorHandler;
 using System.Security.Cryptography;
 using System.Text;
 using Cmas.Services.Auth.Entities;
+using Nancy;
 
 namespace Cmas.Services.Auth
 {
@@ -21,15 +22,12 @@ namespace Cmas.Services.Auth
         private readonly ILogger _logger;
         private readonly UsersBusinessLayer _usersBusinessLayer;
 
-        public AuthService(IServiceProvider serviceProvider)
+        public AuthService(IServiceProvider serviceProvider, NancyContext ctx)
         {
             _autoMapper = (IMapper) serviceProvider.GetService(typeof(IMapper));
             var loggerFactory = (ILoggerFactory) serviceProvider.GetService(typeof(ILoggerFactory));
-
-            var _commandBuilder = (ICommandBuilder) serviceProvider.GetService(typeof(ICommandBuilder));
-            var _queryBuilder = (IQueryBuilder) serviceProvider.GetService(typeof(IQueryBuilder));
-
-            _usersBusinessLayer = new UsersBusinessLayer(_commandBuilder, _queryBuilder);
+             
+            _usersBusinessLayer = new UsersBusinessLayer(serviceProvider, ctx.CurrentUser);
 
 
             _logger = loggerFactory.CreateLogger<AuthService>();
