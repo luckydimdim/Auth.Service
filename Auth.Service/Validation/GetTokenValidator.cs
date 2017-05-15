@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Cmas.Services.Auth.Validation
 {
-    class GetTokenValidator : AbstractValidator<GetTokenRequest>
+    public class GetTokenValidator : AbstractValidator<GetTokenRequest>
     {
         public GetTokenValidator()
         {

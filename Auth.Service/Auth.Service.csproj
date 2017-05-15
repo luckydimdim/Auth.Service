@@ -28,6 +28,7 @@
     <PackageReference Include="Cmas.Infrastructure.ErrorHandler" Version="*" />
     <PackageReference Include="Cmas.Infrastructure.Security" Version="*" />
     <PackageReference Include="jose-jwt" Version="2.3.0" />
+    <PackageReference Include="MailKit" Version="1.16.1" />
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Nancy.Validation.FluentValidation" Version="2.0.0-clinteastwood" />
   </ItemGroup>

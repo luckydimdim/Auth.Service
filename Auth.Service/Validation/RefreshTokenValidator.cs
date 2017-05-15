@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Cmas.Services.Auth.Validation
 {
-    class RefreshTokenValidator : AbstractValidator<RefreshTokenRequest>
+    public class RefreshTokenValidator : AbstractValidator<RefreshTokenRequest>
     {
         public RefreshTokenValidator()
         {

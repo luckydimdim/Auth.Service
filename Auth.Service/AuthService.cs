@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using Jose;
 using Microsoft.Extensions.Logging;
-using Cmas.BusinessLayers.Users;
-using Cmas.Infrastructure.Domain.Commands;
-using Cmas.Infrastructure.Domain.Queries;
+using Cmas.BusinessLayers.Users; 
 using Cmas.BusinessLayers.Users.Entities;
 using System.Threading.Tasks;
 using Cmas.Infrastructure.ErrorHandler;
@@ -13,6 +11,9 @@ using System.Security.Cryptography;
 using System.Text;
 using Cmas.Services.Auth.Entities;
 using Nancy;
+using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 
 namespace Cmas.Services.Auth
 {
@@ -110,11 +111,24 @@ namespace Cmas.Services.Auth
 
             login = login.ToLower();
 
-            User user = await _usersBusinessLayer.GetUser(login);
+            User user = null;
+            try
+            {
+                user = await _usersBusinessLayer.GetUser(login);
+            }
+            catch (NotFoundErrorException)
+            {
+                throw new AuthorizationErrorException("Incorrect login or password");
+            }
 
             if (user == null)
             {
                 throw new AuthorizationErrorException("Incorrect login or password");
+            }
+
+            if (!string.IsNullOrEmpty(user.actHash))
+            {
+                throw new AuthorizationErrorException("User not activated");
             }
 
             var passwordHash = sha256(password, user.Id);
@@ -144,7 +158,20 @@ namespace Cmas.Services.Auth
                 throw new InvalidTokenErrorException();
             }
 
-            User user = await _usersBusinessLayer.GetUser(payload.sub);
+            User user = null;
+            try
+            {
+                user = await _usersBusinessLayer.GetUser(payload.sub);
+            }
+            catch (NotFoundErrorException)
+            {
+                throw new AuthorizationErrorException("User not found");
+            }
+
+            if (!string.IsNullOrEmpty(user.actHash))
+            {
+                throw new AuthorizationErrorException("User not activated");
+            }
 
             var shortPasswordHash = GetShortPasswordHash(user.PasswordHash);
 
@@ -153,13 +180,164 @@ namespace Cmas.Services.Auth
                 _logger.LogInformation("Incorrect token (password changed)");
                 throw new InvalidTokenErrorException();
             }
+             
+            return CreateToken(user);
+        }
 
-            if (user == null)
+        public async Task<bool> ActivateAsync(string login, string password, string hash)
+        {
+            if (string.IsNullOrEmpty(login))
+                throw new ArgumentException("login");
+
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("password");
+
+            if (string.IsNullOrEmpty(hash))
+                throw new ArgumentException("hash");
+
+            _logger.LogInformation(string.Format("user activating... login = {0}", login));
+
+            User user = null;
+
+            try
             {
-                throw new AuthorizationErrorException("User not found");
+                user = await _usersBusinessLayer.GetUser(login);
+            }
+            catch (NotFoundErrorException)
+            {
+                _logger.LogInformation("user not found");
+                return false;
             }
 
-            return CreateToken(user);
+            if (user.actHash != hash)
+            {
+                _logger.LogInformation("hashes are different");
+                return false;
+            }
+
+            if (!PasswordIsSecure(password))
+            {
+                _logger.LogInformation("password is not secure");
+                return false;
+            }
+
+            user.PasswordHash = sha256(password, user.Id);
+            user.actHash = string.Empty;
+
+            await _usersBusinessLayer.UpdateUser(user);
+
+            return true;
+        }
+
+        public async Task SendActivationLinkAsync(string login, string email)
+        {
+
+            if (string.IsNullOrEmpty(login))
+                throw new ArgumentException("login");
+
+            if (string.IsNullOrEmpty(email))
+                throw new ArgumentException("email");
+
+            User user = null;
+
+            try
+            {
+                user = await _usersBusinessLayer.GetUser(login);
+            }
+            catch (NotFoundErrorException)
+            {
+                _logger.LogInformation("user not found");
+                return;
+            }
+
+            //TODO: вынести в конфиг
+            var fromName = "cmas";
+            var fromMail = "youtrack@yamalspg.ru";
+            var smtpHost = "ex01-hsn43.cloud.novatek.ru";
+            var smtpPort = 587;
+            var smtpLogin = @"MSK\youtrack";
+            var smtpPassword = @"Uj37-y2q";
+            var cmasUrl = "http://localhost:63342/cmas.frontend";
+
+            var emailMessage = new MimeMessage();
+
+            string actHash = sha256(Guid.NewGuid().ToString(), login);
+            string url = string.Format("{0}/web/index.html#/activation?actHash={1}&login={2}", cmasUrl, actHash, login);
+
+            string message = string.Format("Для активации аккаунта {0} в системе CMAS необходимо перейти по указанной ссылке:\n\n{1}", login, url);
+            message += "\n\nДанное письмо создано автоматически, на него не надо отвечать";
+
+
+            user.actHash = actHash;
+            await _usersBusinessLayer.UpdateUser(user);
+
+            _logger.LogInformation(String.Format("Хэш успешно сохранен"));
+
+            emailMessage.From.Add(new MailboxAddress(fromName, fromMail));
+            emailMessage.To.Add(new MailboxAddress("", email));
+            emailMessage.Subject = "CMAS. Активация аккаунта";
+            emailMessage.Body = new TextPart("plain") { Text = message };
+
+            using (var client = new SmtpClient())
+            { 
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls).ConfigureAwait(false);
+                await client.AuthenticateAsync(smtpLogin, smtpPassword);
+                await client.SendAsync(emailMessage).ConfigureAwait(false);
+                await client.DisconnectAsync(true).ConfigureAwait(false);
+            }
+
+            _logger.LogInformation(String.Format("Ссылка на активацию успешно отправлена"));
+        }
+
+        /// <summary>
+        ///     Проверка безопасности пароля
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public static bool PasswordIsSecure(string password)
+        {
+            var minimumLength = 7;
+            var maximumLength = 100;
+
+            var letters = 0;
+            var upperCaseLetters = 0;
+            var lowerCaseLetters = 0;
+            var digits = 0;
+
+            if (String.IsNullOrEmpty(password))
+                return false;
+
+            if (password.Length < minimumLength || password.Length > maximumLength)
+                return false;
+
+            foreach (var ch in password)
+            {
+                if (Char.IsLetter(ch))
+                {
+                    letters++;
+
+                    if (Char.IsLower(ch))
+                    {
+                        lowerCaseLetters++;
+                    }
+
+                    if (Char.IsUpper(ch))
+                    {
+                        upperCaseLetters++;
+                    }
+                }
+                else if (Char.IsDigit(ch))
+                    digits++;
+            }
+
+            if (!((letters >= 2 && digits >= 5) || (letters >= 5 && digits >= 2)))
+                return false; // Минимальное использование 2 буквы и 5 цифр, или 5 букв и 2 цифры.
+
+            if (lowerCaseLetters == 0 || upperCaseLetters == 0)
+                return false; // обязательное использование букв разного регистра
+
+            return true;
         }
     }
 }
