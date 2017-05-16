@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Cmas.Infrastructure.ErrorHandler;
 using System.Security.Cryptography;
 using System.Text;
+using Cmas.Infrastructure.Configuration;
 using Cmas.Services.Auth.Entities;
 using Nancy;
 using MimeKit;
@@ -22,10 +23,13 @@ namespace Cmas.Services.Auth
         private readonly IMapper _autoMapper;
         private readonly ILogger _logger;
         private readonly UsersBusinessLayer _usersBusinessLayer;
+        private readonly CmasConfiguration _cmasConfiguration;
 
         public AuthService(IServiceProvider serviceProvider, NancyContext ctx)
         {
             _autoMapper = (IMapper) serviceProvider.GetService(typeof(IMapper));
+            _cmasConfiguration = serviceProvider.GetConfiguration();
+
             var loggerFactory = (ILoggerFactory) serviceProvider.GetService(typeof(ILoggerFactory));
              
             _usersBusinessLayer = new UsersBusinessLayer(serviceProvider, ctx.CurrentUser);
@@ -252,12 +256,12 @@ namespace Cmas.Services.Auth
 
             //TODO: вынести в конфиг
             var fromName = "cmas";
-            var fromMail = "youtrack@yamalspg.ru";
-            var smtpHost = "ex01-hsn43.cloud.novatek.ru";
-            var smtpPort = 587;
-            var smtpLogin = @"MSK\youtrack";
-            var smtpPassword = @"Uj37-y2q";
-            var cmasUrl = "http://localhost:63342/cmas.frontend";
+            var fromMail = _cmasConfiguration.Smtp.From;
+            var smtpHost = _cmasConfiguration.Smtp.Host;
+            var smtpPort = _cmasConfiguration.Smtp.Port;
+            var smtpLogin = _cmasConfiguration.Smtp.Login;
+            var smtpPassword = _cmasConfiguration.Smtp.Password;
+            var cmasUrl = _cmasConfiguration.CmasUrl;
 
             var emailMessage = new MimeMessage();
 
