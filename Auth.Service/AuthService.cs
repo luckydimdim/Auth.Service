@@ -130,7 +130,7 @@ namespace Cmas.Services.Auth
                 throw new AuthorizationErrorException("Incorrect login or password");
             }
 
-            if (!string.IsNullOrEmpty(user.actHash))
+            if (!string.IsNullOrEmpty(user.actHash) || string.IsNullOrEmpty(user.PasswordHash))
             {
                 throw new AuthorizationErrorException("User not activated");
             }
@@ -172,7 +172,7 @@ namespace Cmas.Services.Auth
                 throw new AuthorizationErrorException("User not found");
             }
 
-            if (!string.IsNullOrEmpty(user.actHash))
+            if (!string.IsNullOrEmpty(user.actHash) || string.IsNullOrEmpty(user.PasswordHash))
             {
                 throw new AuthorizationErrorException("User not activated");
             }
