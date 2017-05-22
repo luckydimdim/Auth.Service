@@ -18,11 +18,13 @@ namespace Cmas.Services.Auth
         }
 
         /// <summary>
-        /// Получить 
+        /// Получить информацию по пользователю из токена
         /// </summary>
-        /// <param name="jwtToken"></param>
+        /// <param name="jwtToken">токен</param>
         public ClaimsPrincipal GetUserFromAccessToken(string jwtToken)
         {
+            _logger.LogInformation("getting user from token...");
+
             if (string.IsNullOrEmpty(jwtToken))
             {
                 return null;
@@ -50,7 +52,7 @@ namespace Cmas.Services.Auth
                     identity.AddClaim(new Claim(ClaimTypes.Role.ToString(), role));
                 }
 
-                _logger.LogInformation(String.Format("User login: {0}", identity.Name));
+                _logger.LogInformation($"User login: {identity.Name} Roles: {payload.roles}");
 
                 var principal = new ClaimsPrincipal(identity);
 

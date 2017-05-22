@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Cmas.Services.Auth.Dtos.Request
+﻿namespace Cmas.Services.Auth.Dtos.Request
 {
+    /// <summary>
+    /// Запрос на проверку безопасности пароля
+    /// </summary>
     public class CheckPassSecurityRequest
     {
         public string Password;

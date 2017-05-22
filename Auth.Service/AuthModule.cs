@@ -8,6 +8,7 @@ using Nancy.ModelBinding;
 using Cmas.Infrastructure.ErrorHandler;
 using Nancy.Responses.Negotiation;
 using Cmas.Services.Auth.Dtos.Response;
+using Cmas.Infrastructure.Security;
 
 namespace Cmas.Services.Auth
 {
@@ -131,6 +132,8 @@ namespace Cmas.Services.Auth
 
         private async Task<Negotiator> SendActivationLinkHandlerAsync(dynamic args, CancellationToken ct)
         {
+            this.RequiresRoles(new[] { Role.Customer });
+
             SendActLinkRequest request = this.Bind();
 
             var validationResult = this.Validate(request);

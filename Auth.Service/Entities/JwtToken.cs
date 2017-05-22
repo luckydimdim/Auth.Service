@@ -1,5 +1,8 @@
 ﻿namespace Cmas.Services.Auth.Entities
 {
+    /// <summary>
+    /// Токен, используемый при аутентификации пользователя
+    /// </summary>
     public class JwtToken
     {
         /// <summary>
