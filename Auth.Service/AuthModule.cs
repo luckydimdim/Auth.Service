@@ -132,7 +132,7 @@ namespace Cmas.Services.Auth
 
         private async Task<Negotiator> SendActivationLinkHandlerAsync(dynamic args, CancellationToken ct)
         {
-            this.RequiresRoles(new[] { Role.Customer });
+            this.RequiresRoles(new[] { Role.Administration });
 
             SendActLinkRequest request = this.Bind();
 
