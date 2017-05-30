@@ -124,7 +124,7 @@ namespace Cmas.Services.Auth
 
             login = login.ToLower();
 
-            User user = await _usersBusinessLayer.GetUser(login);
+            User user = await _usersBusinessLayer.GetUserByLogin(login);
 
             if (user == null)
             {
@@ -178,7 +178,7 @@ namespace Cmas.Services.Auth
                 throw new InvalidTokenErrorException();
             }
 
-            User user = await _usersBusinessLayer.GetUser(payload.sub);
+            User user = await _usersBusinessLayer.GetUserByLogin(payload.sub);
 
             if (user == null)
                 throw new AuthorizationErrorException("User not found");
@@ -219,7 +219,7 @@ namespace Cmas.Services.Auth
 
             _logger.LogInformation($"user activating. Login = {login} hash = {hash}");
 
-            User user = await _usersBusinessLayer.GetUser(login);
+            User user = await _usersBusinessLayer.GetUserByLogin(login);
 
             if (user == null)
             {
@@ -265,7 +265,7 @@ namespace Cmas.Services.Auth
 
             _logger.LogInformation($"sending activation link. Login: {login} email: {email}");
  
-            User user =  await _usersBusinessLayer.GetUser(login);
+            User user =  await _usersBusinessLayer.GetUserByLogin(login);
 
             if (user == null)
             {
