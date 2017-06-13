@@ -284,7 +284,7 @@ namespace Cmas.Services.Auth
             var emailMessage = new MimeMessage();
 
             string actHash = Sha256(Guid.NewGuid().ToString(), login);
-            string url = $"{cmasUrl}/web/index.html#/activation?actHash={actHash}&login={login}";
+            string url = $"{cmasUrl}/#/activation?actHash={actHash}&login={login}";
 
             _logger.LogInformation($"generated url: {url}");
 
